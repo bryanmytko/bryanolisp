@@ -99,6 +99,15 @@ lval* lval_pop(lval* v, int i){
   return x;
 }
 
+lval* lval_join(lval* x, lval* y){
+  while(y->count){
+    x = lval_add(x, lval_pop(y, 0));
+  }
+
+  lval_del(y);
+  return x;
+}
+
 lval* lval_take(lval* v, int i){
   lval* x = lval_pop(v, i);
   lval_del(v);
@@ -171,6 +180,13 @@ lval* builtin_op(lval* a, char* op){
 
 #define LASSERT(args, cond, err) if(!(cond)) { lval_del(args); return lval_err(err); }
 
+lval* lval_eval(lval* v);
+
+lval* builtin_list(lval* a){
+  a->type = LVAL_QEXPR;
+  return a;
+}
+
 lval* builtin_head(lval* a){
   /* Check Error Conditions */
   LASSERT(a, a->count == 1,
@@ -203,11 +219,6 @@ lval* builtin_tail(lval* a){
   return v;
 }
 
-lval* builtin_list(lval* a){
-  a->type = LVAL_QEXPR;
-  return a;
-}
-
 lval* builtin_eval(lval* a){
   LASSERT(a, a->count == 1,
       "Function 'eval' passed too many arguments");
@@ -235,15 +246,6 @@ lval* builtin_join(lval* a){
   return x;
 }
 
-lval* lval_join(lval* x, lval* y){
-  while(y->count){
-    x = lval_add(x, lval_pop(y, 0));
-  }
-
-  lval_del(y);
-  return x;
-}
-
 lval* builtin(lval* a, char* func) {
   if(strcmp("list", func) == 0) { return builtin_list(a); }
   if(strcmp("head", func) == 0) { return builtin_head(a); }
@@ -254,8 +256,6 @@ lval* builtin(lval* a, char* func) {
   lval_del(a);
   return lval_err("Unknown function!");
 }
-
-lval* lval_eval(lval* v);
 
 lval* lval_eval_sexpr(lval* v){
   /* Eval children */
