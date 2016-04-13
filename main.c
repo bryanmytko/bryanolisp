@@ -173,9 +173,12 @@ lval* builtin_op(lval* a, char* op){
 
 lval* builtin_head(lval* a){
   /* Check Error Conditions */
-  LASSERT(a, a->count == 1, "Function \"head\": Too many arguments");
-  LASSERT(a, a->cell[0]->type == LVAL_QEXPR, "Function \"head\": Incorrect types");
-  LASSERT(a, a->cell[0]->count != 0, "Function \"head\": Passed {}");
+  LASSERT(a, a->count == 1,
+      "Function \"head\": Too many arguments");
+  LASSERT(a, a->cell[0]->type == LVAL_QEXPR,
+      "Function \"head\": Incorrect types");
+  LASSERT(a, a->cell[0]->count != 0,
+      "Function \"head\": Passed {}");
 
   /* Take first argument */
   lval* v = lval_take(a, 0);
@@ -186,15 +189,59 @@ lval* builtin_head(lval* a){
 
 lval* builtin_tail(lval* a){
   /* Check Error Conditions */
-  LASSERT(a, a->count == 1, "Function \"tail\": Too many arguments");
-  LASSERT(a, a->cell[0]->type == LVAL_QEXPR, "Function \"tail\": Incorrect types");
-  LASSERT(a, a->cell[0]->count != 0, "Function \"tail\": Passed {}");
+  LASSERT(a, a->count == 1,
+      "Function \"tail\": Too many arguments");
+  LASSERT(a, a->cell[0]->type == LVAL_QEXPR,
+      "Function \"tail\": Incorrect types");
+  LASSERT(a, a->cell[0]->count != 0,
+      "Function \"tail\": Passed {}");
 
   /* Take first argument */
   lval* v = lval_take(a, 0);
 
   lval_del(lval_pop(v, 0));
   return v;
+}
+
+lval* builtin_list(lval* a){
+  a->type = LVAL_QEXPR;
+  return a;
+}
+
+lval* builtin_eval(lval* a){
+  LASSERT(a, a->count == 1,
+      "Function 'eval' passed too many arguments");
+  LASSERT(a, a->cell[0]->type == LVAL_QEXPR,
+      "Function 'eval' passed incorrect type!");
+
+  lval* x = lval_take(a, 0);
+  x->type = LVAL_SEXPR;
+  return lval_eval(x);
+}
+
+lval* builtin_join(lval* a){
+  for(int i = 0; i < a->count; i++){
+    LASSERT(a, a->cell[i]->type == LVAL_QEXPR,
+        "Function 'join' passed incorrect type!");
+  }
+
+  lval* x = lval_pop(a, 0);
+
+  while(a->count){
+    x = lval_join(x, lval_pop(a, 0));
+  }
+
+  lval_del(a);
+  return x;
+}
+
+lval* lval_join(lval* x, lval* y){
+  while(y->count){
+    x = lval_add(x, lval_pop(y, 0));
+  }
+
+  lval_del(y);
+  return x;
 }
 
 lval* lval_eval(lval* v);
